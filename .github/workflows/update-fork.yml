@@ -1,0 +1,33 @@
+
+name: Update Fork - E2B
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Запуск каждый день в полночь
+  workflow_dispatch:
+
+jobs:
+  update-fork:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Upstream
+        uses: actions/checkout@v3
+        with:
+          repository: 'e2b-dev/E2B'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: upstream
+
+      - name: Checkout Fork
+        uses: actions/checkout@v3
+        with:
+          repository: 'consulfedor/E2B'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: fork
+
+      - name: Sync Fork
+        run: |
+          cd fork
+          git config user.name '${{ github.actor }}'
+          git config user.email '${{ github.actor }}@users.noreply.github.com'
+          git pull --ff-only ../upstream/main
+          git push origin main
