@@ -1,33 +1,36 @@
-
-name: Update Fork - E2B
+name: Update Fork
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Запуск каждый день в полночь
+    - cron: '0 0 * * *'  # Запуск ежедневно в полночь
   workflow_dispatch:
 
 jobs:
-  update-fork:
+  sync:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Upstream
+      - name: Checkout
         uses: actions/checkout@v3
-        with:
-          repository: 'e2b-dev/E2B'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: upstream
 
-      - name: Checkout Fork
-        uses: actions/checkout@v3
-        with:
-          repository: 'consulfedor/E2B'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: fork
-
-      - name: Sync Fork
+      - name: Set up Git
         run: |
-          cd fork
-          git config user.name '${{ github.actor }}'
-          git config user.email '${{ github.actor }}@users.noreply.github.com'
-          git pull --ff-only ../upstream/main
-          git push origin main
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add Upstream
+        run: git remote add upstream https://github.com/.git
+
+      - name: Fetch Upstream
+        run: git fetch upstream
+
+      - name: Checkout Default Branch
+        run: git checkout main
+
+      - name: Merge Upstream
+        run: git merge upstream/main --allow-unrelated-histories --no-edit
+
+      - name: Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push origin main
